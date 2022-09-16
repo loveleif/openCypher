@@ -116,7 +116,7 @@ case class Scenario(categories: List[String], featureName: String, number: Optio
 
           case (ctx, ExpectResult(expected, _, sorted)) =>
             ctx.lastResult match {
-              case Right(records) =>
+              case Right(CypherQueryResult(records, _)) =>
                 val correctResult =
                   if (sorted)
                     expected == records
@@ -160,14 +160,10 @@ case class Scenario(categories: List[String], featureName: String, number: Optio
             }
 
           case (ctx, SideEffects(expected, _)) =>
-            val before = ctx.state
-            val after = ctx.measure.state
-            val diff = before diff after
-            if (diff != expected)
-              Left(
-                ScenarioFailedException(
-                  s"${java.lang.System.lineSeparator()}Expected side effects:${java.lang.System.lineSeparator()}$expected${java.lang.System.lineSeparator()}Actual side effects:${java.lang.System.lineSeparator()}$diff"))
-            else Right(ctx)
+            checkSideEffects(ctx, expected)
+              .orElse(checkQueryStatistics(ctx, expected))
+              .map(Left.apply)
+              .getOrElse(Right(ctx))
 
           case (ctx, Parameters(ps, _)) =>
             Right(ctx.addParameters(ps))
@@ -188,6 +184,39 @@ case class Scenario(categories: List[String], featureName: String, number: Optio
     }
   }
 
+  private def checkSideEffects(ctx: ScenarioExecutionContext, expected: Diff): Option[ScenarioFailedException] = {
+    val before = ctx.state
+    val after = ctx.measure.state
+    val diff = before diff after
+    if (diff != expected) {
+      Some(ScenarioFailedException(
+          s"""
+             |Expected side effects:
+             |$expected
+             |Actual side effects:
+             |$diff
+             |""".stripMargin
+      ))
+    } else {
+      None
+    }
+  }
+
+  private def checkQueryStatistics(ctx: ScenarioExecutionContext, expected: Diff): Option[ScenarioFailedException] = {
+    ctx.lastResult.toOption
+      .collect {
+        case result if result.statistics != QueryStatistics.from(expected) =>
+          ScenarioFailedException(
+            s"""
+               |Expected query statistics:
+               |${QueryStatistics.from(expected).toPrettyString}
+               |Actual query statistics:
+               |${result.statistics.toPrettyString}
+               |""".stripMargin
+          )
+      }
+  }
+
   def validate(): Unit = {
     // TODO:
     // validate similar to FeatureFormatValidator
@@ -198,7 +227,7 @@ case class Scenario(categories: List[String], featureName: String, number: Optio
 
   case class ScenarioExecutionContext(
       graph: Graph,
-      lastResult: Result = Right(CypherValueRecords.empty),
+      lastResult: Result = Right(CypherQueryResult.empty),
       state: State = State(),
       parameters: Map[String, CypherValue] = Map.empty) {
 

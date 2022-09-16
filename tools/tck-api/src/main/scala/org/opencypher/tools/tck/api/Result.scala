@@ -27,6 +27,16 @@
  */
 package org.opencypher.tools.tck.api
 
+import org.opencypher.tools.tck.SideEffectOps.Diff
+import org.opencypher.tools.tck.constants.TCKSideEffects
+import org.opencypher.tools.tck.constants.TCKSideEffects.ADDED_LABELS
+import org.opencypher.tools.tck.constants.TCKSideEffects.ADDED_NODES
+import org.opencypher.tools.tck.constants.TCKSideEffects.ADDED_PROPERTIES
+import org.opencypher.tools.tck.constants.TCKSideEffects.ADDED_RELATIONSHIPS
+import org.opencypher.tools.tck.constants.TCKSideEffects.DELETED_LABELS
+import org.opencypher.tools.tck.constants.TCKSideEffects.DELETED_NODES
+import org.opencypher.tools.tck.constants.TCKSideEffects.DELETED_PROPERTIES
+import org.opencypher.tools.tck.constants.TCKSideEffects.DELETED_RELATIONSHIPS
 import org.opencypher.tools.tck.values.CypherValue
 
 /**
@@ -40,6 +50,38 @@ case class StringRecords(header: List[String], rows: List[Map[String, String]]) 
     val converted = rows.map(_.map { case (k, v) => (k, CypherValue(v)) })
     CypherValueRecords(header, converted)
   }
+}
+
+case class QueryStatistics(
+  nodesCreated: Int,
+  nodesDeleted: Int,
+  relationshipsCreated: Int,
+  relationshipsDeleted: Int
+) {
+  def toPrettyString: String = {
+    productElementNames.zip(productIterator)
+      .map { case (name, value) => s"$name: $value"}
+      .mkString("\n")
+  }
+}
+
+object QueryStatistics {
+  def empty: QueryStatistics = QueryStatistics(0, 0, 0, 0)
+
+  def from(diff: Diff): QueryStatistics = {
+    QueryStatistics(
+      nodesCreated = diff.v.getOrElse(ADDED_NODES, 0),
+      nodesDeleted = diff.v.getOrElse(DELETED_NODES, 0),
+      relationshipsCreated = diff.v.getOrElse(ADDED_RELATIONSHIPS, 0),
+      relationshipsDeleted = diff.v.getOrElse(DELETED_RELATIONSHIPS, 0)
+    )
+  }
+}
+
+case class CypherQueryResult(records: CypherValueRecords, statistics: QueryStatistics)
+
+object CypherQueryResult {
+  def empty: CypherQueryResult = CypherQueryResult(CypherValueRecords.empty, QueryStatistics.empty)
 }
 
 case class CypherValueRecords(header: List[String], rows: List[Map[String, CypherValue]]) {
@@ -71,8 +113,8 @@ object CypherValueRecords {
     CypherValueRecords(header, parsed)
   }
 
-  val empty = CypherValueRecords(List.empty, List.empty)
-  def emptyWithHeader(header: List[String]) = CypherValueRecords(header, List.empty)
+  val empty: CypherValueRecords = CypherValueRecords(List.empty, List.empty)
+  def emptyWithHeader(header: List[String]): CypherValueRecords = CypherValueRecords(header, List.empty)
 }
 
 case class ExecutionFailed(errorType: String, phase: String, detail: String, exception: Option[Throwable] = None)

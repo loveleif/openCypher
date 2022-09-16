@@ -27,6 +27,7 @@
  */
 package org.opencypher.tools.tck
 
+import org.opencypher.tools.tck.api.CypherQueryResult
 import org.opencypher.tools.tck.api.{ExecutionFailed, Graph, SideEffectQuery}
 import org.opencypher.tools.tck.constants.TCKQueries._
 import org.opencypher.tools.tck.constants.TCKSideEffects._
@@ -101,7 +102,7 @@ object SideEffectOps {
     val nodeProps = graph.execute(NODE_PROPS_QUERY, Map.empty, SideEffectQuery)._2 match {
       case Left(error) =>
         throw MeasurementFailed(error)
-      case Right(records) =>
+      case Right(CypherQueryResult(records, _)) =>
         records.rows.map { row =>
           Tuple3(row("nodeId"), row("key"), row("value"))
         }
@@ -109,7 +110,7 @@ object SideEffectOps {
     val relProps = graph.execute(REL_PROPS_QUERY, Map.empty, SideEffectQuery)._2 match {
       case Left(error) =>
         throw MeasurementFailed(error)
-      case Right(records) =>
+      case Right(CypherQueryResult(records, _)) =>
         records.rows.map { row =>
           Tuple3(row("relId"), row("key"), row("value"))
         }
@@ -122,7 +123,7 @@ object SideEffectOps {
     graph.execute(q, Map.empty, SideEffectQuery)._2 match {
       case Left(error) =>
         throw MeasurementFailed(error)
-      case Right(records) =>
+      case Right(CypherQueryResult(records, _)) =>
         records.rows.flatMap(_.values).toSet
     }
 }

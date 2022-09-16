@@ -91,7 +91,7 @@ trait Graph extends ResultCreation {
 }
 
 object Graph {
-  type Result = Either[ExecutionFailed, CypherValueRecords]
+  type Result = Either[ExecutionFailed, CypherQueryResult]
 }
 
 /**
@@ -119,7 +119,6 @@ trait CsvFileCreationSupport {
 }
 
 trait ResultCreation {
-  implicit def resultFromValueRecords(records: CypherValueRecords): Graph.Result = Right(records)
-  implicit def resultFromStringRecords(records: StringRecords): Graph.Result = Right(records.asValueRecords)
+  implicit def resultFromValueRecords(records: CypherQueryResult): Graph.Result = Right(records)
   implicit def resultFromError(error: ExecutionFailed): Graph.Result = Left(error)
 }

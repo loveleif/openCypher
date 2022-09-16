@@ -80,13 +80,13 @@ class TCKEventsTest extends AnyFunSuite with Assertions with Matchers {
     override def cypher(query: String, params: Map[String, CypherValue], queryType: QueryType): Result = {
       queryType match {
         case InitQuery =>
-          CypherValueRecords.empty
+          CypherQueryResult.empty
         case SideEffectQuery =>
-          CypherValueRecords.empty
+          CypherQueryResult.empty
         case ControlQuery =>
-          CypherValueRecords.empty
+          CypherQueryResult.empty
         case ExecQuery =>
-          StringRecords(List("n"), List(Map("n" -> "3")))
+          CypherQueryResult(StringRecords(List("n"), List(Map("n" -> "3"))).asValueRecords, Map.empty)
       }
     }
     override def registerProcedure(signature: String, values: CypherValueRecords): Unit =

@@ -83,18 +83,18 @@ class TckTest extends AnyFunSpec with Assertions with Matchers {
     override def cypher(query: String, params: Map[String, CypherValue], queryType: QueryType): Result = {
       queryType match {
         case InitQuery =>
-          CypherValueRecords.empty
+          CypherQueryResult.empty
         case SideEffectQuery =>
-          CypherValueRecords.empty
+          CypherQueryResult.empty
         case ControlQuery =>
-          CypherValueRecords.empty
+          CypherQueryResult.empty
         case ExecQuery if query.contains("foo()") =>
           ExecutionFailed(SYNTAX_ERROR, COMPILE_TIME, UNKNOWN_FUNCTION)
         // assert that csv path parameter is not overwritten by additional parameters
         case ExecQuery if query.contains("LOAD CSV") && params.keySet.equals(Set("param", "list")) =>
-          StringRecords(List("res"), cvsData.rows.map(r => Map("res" -> r("txt").toString)))
+          CypherQueryResult(StringRecords(List("res"), cvsData.rows.map(r => Map("res" -> r("txt").toString))).asValueRecords, Map.empty)
         case ExecQuery =>
-          StringRecords(List("1"), List(Map("1" -> "1")))
+          CypherQueryResult(StringRecords(List("1"), List(Map("1" -> "1"))).asValueRecords, Map.empty)
       }
     }
 

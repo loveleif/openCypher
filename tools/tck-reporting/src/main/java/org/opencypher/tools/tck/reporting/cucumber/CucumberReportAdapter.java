@@ -47,6 +47,7 @@ import java.util.stream.Collectors;
 import org.junit.jupiter.api.extension.AfterAllCallback;
 import org.junit.jupiter.api.extension.BeforeAllCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
+import org.opencypher.tools.tck.api.CypherQueryResult;
 import org.opencypher.tools.tck.api.CypherValueRecords;
 import org.opencypher.tools.tck.api.ExecutionFailed;
 import org.opencypher.tools.tck.api.Measure;
@@ -180,11 +181,11 @@ public class CucumberReportAdapter implements BeforeAllCallback, AfterAllCallbac
         };
     }
 
-    private Status getStatus(Either<Throwable, Either<ExecutionFailed, CypherValueRecords>> result) {
+    private Status getStatus(Either<Throwable, Either<ExecutionFailed, CypherQueryResult>> result) {
         return result.isRight() ? Status.PASSED : Status.FAILED;
     }
 
-    private Throwable errorOrNull(Either<Throwable, Either<ExecutionFailed, CypherValueRecords>> result) {
+    private Throwable errorOrNull(Either<Throwable, Either<ExecutionFailed, CypherQueryResult>> result) {
         return result.isLeft() ? result.left().get() : null;
     }
 

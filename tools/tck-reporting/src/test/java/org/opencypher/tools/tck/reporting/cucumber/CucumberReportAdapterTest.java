@@ -31,6 +31,7 @@ import org.junit.jupiter.api.DynamicTest;
 import org.junit.jupiter.api.TestFactory;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.function.Executable;
+import org.opencypher.tools.tck.api.CypherQueryResult;
 import org.opencypher.tools.tck.api.CypherTCK;
 import org.opencypher.tools.tck.api.CypherValueRecords;
 import org.opencypher.tools.tck.api.ExecutionFailed;
@@ -79,7 +80,7 @@ public class CucumberReportAdapterTest {
 
     private class FakeGraph implements Graph {
         @Override
-        public Either<ExecutionFailed, CypherValueRecords> cypher(String query, Map<String, CypherValue> params, QueryType meta) {
+        public Either<ExecutionFailed, CypherQueryResult> cypher( String query, Map<String, CypherValue> params, QueryType meta) {
             if (query.contains("foo()")) {
                 return new Left<>(new ExecutionFailed("SyntaxError", "compile time", "UnknownFunction", null));
             } else if (query.startsWith("RETURN ")) {
@@ -88,9 +89,9 @@ public class CucumberReportAdapterTest {
                 List<String> header = new Set.Set1<>(result).toList();
                 Map<String, String> row = new Map.Map1<>(result, result);
                 List<Map<String, String>> rows = new Set.Set1<>(row).toList();
-                return new Right<>(new StringRecords(header, rows).asValueRecords());
+                return new Right<>(CypherQueryResult.apply(new StringRecords(header, rows).asValueRecords(), scala.collection.immutable.Map$.MODULE$.empty()));
             } else {
-                return new Right<>(CypherValueRecords.empty());
+                return new Right<>(CypherQueryResult.empty());
             }
         }
     }

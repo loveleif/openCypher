@@ -6,7 +6,7 @@
   <groupId>org.opencypher</groupId>
   <artifactId>openCypher</artifactId>
   <packaging>pom</packaging>
-  <version>1.0-SNAPSHOT</version>
+  <version>1.0-KL-SNAPSHOT</version>
   <name>openCypher</name>
   <url>http://openCypher.org</url>
   <description>openCypher -- The graph query language standard based on Cypher</description>
